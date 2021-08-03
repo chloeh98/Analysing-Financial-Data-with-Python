@@ -1,0 +1,33 @@
+import codecademylib
+import pandas as pd
+
+ad_clicks = pd.read_csv('ad_clicks.csv')
+print(ad_clicks.head())
+
+number_clicks = ad_clicks.groupby('utm_source').user_id.count().reset_index()
+
+#this is True if the ad_clicks_timestamp is not Null and therefore if the add was clicked on
+ad_clicks['is_click'] = ~ad_clicks.ad_click_timestamp.isnull()
+
+
+click_by_source = ad_clicks.groupby(['utm_source', 'is_click']).user_id.count().reset_index()
+
+#makes the table more readable
+clicks_pivot = click_by_source.pivot(columns = 'is_click', index = 'utm_source', values = 'user_id')
+
+#creates a new column showing the percentage of users that clicked on the advert compared to the total users for each advert
+clicks_pivot['percent clicked'] = clicks_pivot[True]/(clicks_pivot[True] + clicks_pivot[False])
+
+ad_clicks.groupby('experimental_group').user_id.count().reset_index()
+ad_clicks_experimental = ad_clicks.groupby(['experimental_group', 'is_click']).user_id.count().reset_index()
+
+
+a_clicks = ad_clicks[ad_clicks.experimental_group == 'A']
+b_clicks = ad_clicks[ad_clicks.experimental_group == 'B']
+
+#below creates seperate dataframes for the results from advert A and advert B and breaks down the percentage of users who clicked on each ad each day
+a_clicks_day = a_clicks.groupby(['is_click', 'day']).user_id.count().reset_index().pivot(columns = 'is_click', index = 'day', values = 'user_id').reset_index()
+a_clicks_day['percent'] = a_clicks_day[True]/(a_clicks_day[True] + a_clicks_day[False])
+
+b_clicks_pivot = b_clicks.groupby(['is_click', 'day']).user_id.count().reset_index().pivot(columns = 'is_click', index = 'day', values = 'user_id').reset_index()
+b_clicks_pivot['percentage'] = b_clicks_pivot[True]/(b_clicks_pivot[True] + b_clicks_pivot[False])
